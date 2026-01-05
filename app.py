@@ -1,11 +1,6 @@
-# ui/app.py
-
 import sys
 import os
 
-# --------------------------------------------------
-# Add project root to Python path
-# --------------------------------------------------
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import streamlit as st
@@ -15,17 +10,11 @@ from generator.baseline import generate_baseline_docstring
 from reports.coverage import generate_coverage_report
 
 
-# --------------------------------------------------
-# Page configuration
-# --------------------------------------------------
 st.set_page_config(
     page_title="Automated Docstring Generator",
     layout="centered"
 )
 
-# --------------------------------------------------
-# Dark Blue – Minimal Professional Theme
-# --------------------------------------------------
 st.markdown(
     """
     <style>
@@ -94,9 +83,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --------------------------------------------------
 # Title
-# --------------------------------------------------
 st.title("📄 Automated Python Docstring Generator")
 
 st.write(
@@ -106,9 +93,6 @@ st.write(
 
 st.divider()
 
-# --------------------------------------------------
-# File Upload
-# --------------------------------------------------
 st.subheader("📁 Upload Python File")
 
 uploaded_file = st.file_uploader(
@@ -116,9 +100,6 @@ uploaded_file = st.file_uploader(
     type=["py"]
 )
 
-# --------------------------------------------------
-# Main Logic
-# --------------------------------------------------
 if uploaded_file:
     source_code = uploaded_file.read().decode("utf-8")
 
@@ -138,9 +119,7 @@ if uploaded_file:
 
         st.success("✔ Analysis completed successfully")
 
-        # --------------------------------------------------
         # Generated Docstrings
-        # --------------------------------------------------
         st.subheader("🧾 Generated Docstrings")
 
         # Standalone functions
@@ -160,9 +139,7 @@ if uploaded_file:
                     doc = generate_baseline_docstring(method)
                     st.code(doc, language="python")
 
-        # --------------------------------------------------
         # Coverage Report
-        # --------------------------------------------------
         report = generate_coverage_report(functions, classes)
 
         st.divider()
@@ -177,8 +154,6 @@ if uploaded_file:
 else:
     st.info("⬆ Upload a Python file to get started")
 
-# --------------------------------------------------
 # Footer
-# --------------------------------------------------
 st.divider()
 st.caption("📄 Automated Docstring Generator • Internship Project")
