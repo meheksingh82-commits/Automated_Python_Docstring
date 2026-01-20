@@ -4,156 +4,204 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import streamlit as st
-
 from analyzer.parser import parse_code
-from generator.baseline import generate_baseline_docstring
+from generator.styled_generator import generate_docstring
 from reports.coverage import generate_coverage_report
+from reports.validation import validate_docstrings
 
 
 st.set_page_config(
-    page_title="Automated Docstring Generator",
-    layout="centered"
+    page_title="Automated Docstring Analysis Tool",
+    layout="wide"
 )
 
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background-color: #0F172A;
-    }
 
-    .block-container {
-        max-width: 900px;
-        padding-top: 2rem;
-    }
+st.markdown("""
+<style>
+.stApp {
+    background-color: #8FB5A9;
+}
 
-    h1 {
-        color: #E5E7EB;
-        font-weight: 700;
-    }
+.main-card {
+    background-color: #FFFDF9;
+    padding: 2rem;
+    border-radius: 14px;
+    margin: 2.2rem auto;
+    max-width: 1100px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+    line-height: 1.7;
+}
 
-    h2, h3 {
-        color: #CBD5E1;
-        font-weight: 600;
-    }
+h1 {
+    color: #1F3D36;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
 
-    p, label {
-        color: #E5E7EB;
-        font-size: 15px;
-    }
+h2 {
+    color: #1F3D36;
+    font-weight: 600;
+    margin-top: 1.6rem;
+    margin-bottom: 0.8rem;
+}
 
-    section[data-testid="stFileUploader"] {
-        background-color: #111827;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid #1E293B;
-    }
+p {
+    color: #2F2F2F;
+    font-size: 15px;
+}
 
-    .stButton > button {
-        background-color: #2563EB;
-        color: white;
-        border-radius: 6px;
-        height: 2.8em;
-        font-size: 14px;
-        font-weight: 600;
-        border: none;
-    }
+.section-divider {
+    height: 1px;
+    background-color: #E6DCD2;
+    margin: 2rem 0;
+}
 
-    .stButton > button:hover {
-        background-color: #1D4ED8;
-    }
+pre {
+    background-color: #F3EEE8 !important;
+    border-left: 4px solid #E8B7A4;
+    border-radius: 10px;
+}
 
-    pre {
-        background-color: #020617 !important;
-        border-radius: 8px;
-        border-left: 4px solid #2563EB;
-        padding: 1rem;
-        color: #E5E7EB !important;
-    }
+div[data-testid="metric-container"] {
+    background-color: #FFFDF9;
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #E2D8CE;
+}
+</style>
+""", unsafe_allow_html=True)
 
-    div[data-testid="metric-container"] {
-        background-color: #111827;
-        border-radius: 8px;
-        padding: 12px;
-        border: 1px solid #1E293B;
-        color: #E5E7EB;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
+
+st.sidebar.title("Analysis Panel")
+st.sidebar.markdown(
+    "Upload a Python file and select the documentation style and "
+    "validation mode before analysis."
 )
 
-# Title
-st.title("📄 Automated Python Docstring Generator")
-
-st.write(
-    "Generate baseline docstrings and analyze documentation coverage "
-    "using AST-based static analysis."
-)
-
-st.divider()
-
-st.subheader("📁 Upload Python File")
-
-uploaded_file = st.file_uploader(
-    "Select a Python (.py) file to analyze 📄",
+uploaded_file = st.sidebar.file_uploader(
+    "Upload Python File",
     type=["py"]
 )
 
-if uploaded_file:
+doc_style = st.sidebar.selectbox(
+    "Docstring Style",
+    ["Google", "NumPy", "reST"]
+)
+
+validation_mode = st.sidebar.radio(
+    "Validation Mode",
+    ["Relaxed", "Strict"]
+)
+
+run_analysis = st.sidebar.button("Analyze Codebase")
+
+
+st.markdown("<div class='main-card'>", unsafe_allow_html=True)
+st.title("Automated Docstring Analysis Tool")
+st.write(
+    "A documentation-first static analysis tool designed to improve "
+    "Python code quality using AST-based inspection."
+)
+st.markdown("</div>", unsafe_allow_html=True)
+
+
+if uploaded_file and run_analysis:
     source_code = uploaded_file.read().decode("utf-8")
 
-    st.subheader("📄 Source Code")
+    functions, classes = parse_code(source_code)
+    mode = "strict" if validation_mode == "Strict" else "relaxed"
+    validation = validate_docstrings(source_code, mode)
+
+    failing_lines = set()
+    for issue in validation["violations"]:
+        parts = issue.split(":")
+        if len(parts) > 1 and parts[1].strip().isdigit():
+            failing_lines.add(int(parts[1].strip()))
+
+    st.markdown("<div class='main-card'>", unsafe_allow_html=True)
+    st.markdown("## Source Code")
     st.code(source_code, language="python")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    st.divider()
+    st.markdown("<div class='main-card'>", unsafe_allow_html=True)
+    st.markdown("## Generated Docstrings")
+    for f in functions:
+        st.code(generate_docstring(f, doc_style), language="python")
+    for cls in classes:
+        for method in cls["methods"]:
+            st.code(generate_docstring(method, doc_style), language="python")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    col_run, col_hint = st.columns([1, 2])
-    with col_run:
-        run_clicked = st.button("🚀 Generate Docstrings")
-    with col_hint:
-        st.caption("🔄 You can re-run after uploading a different file")
+    report = generate_coverage_report(functions, classes)
 
-    if run_clicked:
-        functions, classes = parse_code(source_code)
+    st.markdown("<div class='main-card'>", unsafe_allow_html=True)
+    st.markdown("## Documentation Coverage")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Total", report["total"])
+    c2.metric("Documented", report["documented"])
+    c3.metric("Missing", report["missing"])
+    c4.metric("Coverage %", report["coverage"])
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        st.success("✔ Analysis completed successfully")
+    st.markdown("<div class='main-card'>", unsafe_allow_html=True)
+    st.markdown("## Validation Summary")
 
-        # Generated Docstrings
-        st.subheader("🧾 Generated Docstrings")
+    status_color = "#2E7D32" if validation["status"] == "Pass" else "#C62828"
+    st.markdown(
+        f"<p style='font-weight:600;color:{status_color};'>Status: {validation['status']}</p>",
+        unsafe_allow_html=True
+    )
 
-        # Standalone functions
-        if functions:
-            st.markdown("### 📄 Functions")
-            for func in functions:
-                doc = generate_baseline_docstring(func)
-                st.code(doc, language="python")
-        else:
-            st.info("ℹ No standalone functions found.")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Issues", validation["count"])
+    c2.metric("Affected Lines", len(failing_lines))
+    c3.metric("Validation Mode", validation_mode)
 
-        # Class methods
-        if classes:
-            for cls in classes:
-                st.markdown(f"### 📁 Class: `{cls['name']}`")
-                for method in cls["methods"]:
-                    doc = generate_baseline_docstring(method)
-                    st.code(doc, language="python")
+    if validation["status"] == "Fail":
+        st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
+        for issue in validation["violations"]:
+            st.code(issue)
 
-        # Coverage Report
-        report = generate_coverage_report(functions, classes)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        st.divider()
-        st.subheader("🧾 Documentation Coverage Report")
+    st.markdown("<div class='main-card'>", unsafe_allow_html=True)
+    st.markdown("## Export Report")
+    st.markdown("Download a summary of coverage and validation results.")
 
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("📄 Total Items", report["total"])
-        col2.metric("✔ Documented", report["documented"])
-        col3.metric("❌ Missing", report["missing"])
-        col4.metric("📊 Coverage (%)", report["coverage"])
+    export_text = f"""
+AUTOMATED DOCSTRING ANALYSIS REPORT
+
+Docstring Style   : {doc_style}
+Validation Mode   : {validation_mode}
+
+COVERAGE
+Total Items       : {report['total']}
+Documented        : {report['documented']}
+Missing           : {report['missing']}
+Coverage          : {report['coverage']}%
+
+VALIDATION
+Status            : {validation['status']}
+Issues            : {validation['count']}
+Affected Lines    : {len(failing_lines)}
+"""
+
+    st.download_button(
+        "Download Analysis Report",
+        export_text,
+        file_name="docstring_analysis_report.txt"
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 else:
-    st.info("⬆ Upload a Python file to get started")
+    st.markdown("<div class='main-card'>", unsafe_allow_html=True)
+    st.markdown("### Welcome")
+    st.markdown(
+        "Upload a Python file from the sidebar to analyze documentation "
+        "coverage, generate docstrings, and validate against standards."
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# Footer
-st.divider()
-st.caption("📄 Automated Docstring Generator • Internship Project")
+
+st.caption("Docstring Analyzer • Clean Professional UI • Milestone 2")
