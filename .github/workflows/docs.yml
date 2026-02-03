@@ -23,6 +23,7 @@ jobs:
           pip install pydocstyle streamlit
 
       - name: Run documentation checks
-        working-directory: .
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
-          python -m check_docs
+          python check_docs.py
