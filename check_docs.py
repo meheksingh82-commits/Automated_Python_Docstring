@@ -1,5 +1,7 @@
 import sys
+import os
 import pathlib
+sys.path.append(os.getcwd())
 
 from analyzer.parser import parse_code
 from reports.coverage import generate_coverage_report
@@ -54,4 +56,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
