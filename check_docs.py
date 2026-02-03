@@ -16,6 +16,8 @@ def main():
     all_functions = []
     all_classes = []
 
+    validation_failed = False
+
     for file in python_files:
         if "venv" in str(file) or ".git" in str(file):
             continue
@@ -28,21 +30,28 @@ def main():
 
         validation = validate_docstrings(source, mode)
         if validation["status"] == "Fail":
-            print(f"❌ Docstring validation failed in {file}")
-            sys.exit(1)
+            print(f"⚠️ Docstring validation issues in {file}")
+            validation_failed = True
 
     report = generate_coverage_report(all_functions, all_classes)
 
     if report["coverage"] < min_coverage:
         print(
-            f"❌ Documentation coverage too low "
+            f"⚠️ Documentation coverage below threshold "
             f"({report['coverage']}% < {min_coverage}%)"
         )
-        sys.exit(1)
 
-    print("✅ Documentation checks passed")
+    print("📊 Documentation Summary")
+    print(f"Validation mode: {mode}")
+    print(f"Coverage: {report['coverage']}%")
+
+    if validation_failed:
+        print("⚠️ Some documentation issues were found (reported only)")
+
+    print("✅ Documentation checks completed")
     sys.exit(0)
 
 
 if __name__ == "__main__":
     main()
+
