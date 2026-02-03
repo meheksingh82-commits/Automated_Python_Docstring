@@ -1,0 +1,5 @@
+[tool.docstring_analyzer]
+validation_mode = "strict"
+min_coverage = 90
+inject_docstrings = true
+docstring_style = "google"
