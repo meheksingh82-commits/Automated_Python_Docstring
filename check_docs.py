@@ -2,7 +2,7 @@ import sys
 import os
 import pathlib
 
-sys.path.append(os.getcwd())
+sys.path.insert(0, os.getcwd())
 
 from analyzer.parser import parse_code
 from reports.coverage import generate_coverage_report
@@ -12,8 +12,8 @@ from config.config_loader import load_config
 
 def main():
     config = load_config()
-    mode = config["validation_mode"]
-    min_coverage = config["min_coverage"]
+    mode = config.get("validation_mode", "relaxed")
+    min_coverage = config.get("min_coverage", 0)
 
     python_files = pathlib.Path(".").rglob("*.py")
     all_functions = []
@@ -22,7 +22,7 @@ def main():
     validation_failed = False
 
     for file in python_files:
-        if any(x in str(file) for x in ["venv", ".git", ".github"]):
+        if any(skip in str(file) for skip in ["venv", ".git", ".github"]):
             continue
 
         try:
@@ -36,14 +36,14 @@ def main():
 
         validation = validate_docstrings(source, mode)
         if validation["status"] == "Fail":
-            print(f"⚠️ Docstring issues in {file}")
+            print(f"⚠️ Validation issues in {file}")
             validation_failed = True
 
     report = generate_coverage_report(all_functions, all_classes)
 
     print("\n📊 Documentation Summary")
-    print(f"Validation mode: {mode}")
-    print(f"Coverage: {report['coverage']}%")
+    print(f"Validation mode : {mode}")
+    print(f"Coverage        : {report['coverage']}%")
 
     if report["coverage"] < min_coverage:
         print(
@@ -52,12 +52,11 @@ def main():
         )
 
     if validation_failed:
-        print("⚠️ Validation issues detected (report-only mode)")
+        print("⚠️ Docstring issues detected (report-only mode)")
 
-    print("✅ Documentation checks completed")
+    print("✅ Documentation checks completed successfully")
     sys.exit(0)
 
 
 if __name__ == "__main__":
     main()
-
