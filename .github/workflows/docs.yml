@@ -23,5 +23,6 @@ jobs:
           pip install pydocstyle streamlit
 
       - name: Run documentation checks
+        working-directory: .
         run: |
-          python check_docs.py
+          python -m check_docs
