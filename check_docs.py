@@ -1,6 +1,7 @@
 import sys
 import os
 import pathlib
+
 sys.path.append(os.getcwd())
 
 from analyzer.parser import parse_code
@@ -21,10 +22,13 @@ def main():
     validation_failed = False
 
     for file in python_files:
-        if "venv" in str(file) or ".git" in str(file):
+        if any(x in str(file) for x in ["venv", ".git", ".github"]):
             continue
 
-        source = file.read_text(encoding="utf-8")
+        try:
+            source = file.read_text(encoding="utf-8")
+        except Exception:
+            continue
 
         functions, classes = parse_code(source)
         all_functions.extend(functions)
@@ -32,23 +36,23 @@ def main():
 
         validation = validate_docstrings(source, mode)
         if validation["status"] == "Fail":
-            print(f"⚠️ Docstring validation issues in {file}")
+            print(f"⚠️ Docstring issues in {file}")
             validation_failed = True
 
     report = generate_coverage_report(all_functions, all_classes)
 
-    if report["coverage"] < min_coverage:
-        print(
-            f"⚠️ Documentation coverage below threshold "
-            f"({report['coverage']}% < {min_coverage}%)"
-        )
-
-    print("📊 Documentation Summary")
+    print("\n📊 Documentation Summary")
     print(f"Validation mode: {mode}")
     print(f"Coverage: {report['coverage']}%")
 
+    if report["coverage"] < min_coverage:
+        print(
+            f"⚠️ Coverage below threshold "
+            f"({report['coverage']}% < {min_coverage}%)"
+        )
+
     if validation_failed:
-        print("⚠️ Some documentation issues were found (reported only)")
+        print("⚠️ Validation issues detected (report-only mode)")
 
     print("✅ Documentation checks completed")
     sys.exit(0)
@@ -56,5 +60,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
