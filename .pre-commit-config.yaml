@@ -1,0 +1,14 @@
+repos:
+  - repo: local
+    hooks:
+      - id: docgen-inject
+        name: Inject docstrings
+        entry: python scripts/inject_docs.py
+        language: system
+        pass_filenames: false
+
+      - id: docgen-check
+        name: Validate documentation
+        entry: python scripts/check_docs.py
+        language: system
+        pass_filenames: false
