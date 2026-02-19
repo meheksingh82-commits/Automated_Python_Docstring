@@ -25,3 +25,7 @@ jobs:
       - name: Run documentation checks
         run: |
           python check_docs.py
+
+     - name: Run Tests
+        run: pytest --maxfail=1 --disable-warnings -q
+
