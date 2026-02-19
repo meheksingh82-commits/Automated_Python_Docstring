@@ -2,30 +2,38 @@ name: Documentation Quality Check
 
 on:
   push:
+    branches:
+      - master
+      - main
   pull_request:
+    branches:
+      - master
+      - main
 
 jobs:
-  docs:
+  docgen-check:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install streamlit pydocstyle
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
 
-      - name: Run documentation checks
-        run: |
-          python check_docs.py
+      - name: Install project
+        run: pip install -e .
 
-     - name: Run Tests
+      - name: Install testing tools
+        run: pip install pytest
+
+      - name: Run Unit Tests
         run: pytest --maxfail=1 --disable-warnings -q
 
+      - name: Run Documentation Check
+        run: docgen
