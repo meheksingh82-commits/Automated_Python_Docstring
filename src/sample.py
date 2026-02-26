@@ -1,19 +1,15 @@
-def square(number):
-    """Return the square of a number."""
-    return number * number
-
-
-def cube(number):
-    """Function cube."""
-    return number ** 3
-
-
+"""Provide basic arithmetic utilities."""
+def square(x):
+    """Return x squared."""
+    return x * x
+def cube(x):
+    """Return x cubed."""
+    return x * x * x
 class MathUtils:
-    """Class MathUtils."""
+    """Provide arithmetic helper methods."""
     def add(self, a, b):
-        """Add two numbers."""
+        """Return the sum of a and b."""
         return a + b
-
     def subtract(self, a, b):
-        """Function subtract."""
+        """Return the difference of a and b."""
         return a - b

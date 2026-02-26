@@ -3,12 +3,12 @@ repos:
     hooks:
       - id: docgen-inject
         name: Inject docstrings
-        entry: python scripts/inject_docs.py
+        entry: python -m docgen.injector.docstring_injector
         language: system
         pass_filenames: false
 
       - id: docgen-check
         name: Validate documentation
-        entry: python scripts/check_docs.py
+        entry: python -m docgen.check_docs
         language: system
         pass_filenames: false

@@ -1,3 +1,11 @@
-venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+venv/
+.env
+.pytest_cache/
+.streamlit/

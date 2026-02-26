@@ -1,5 +1,29 @@
-[tool.docstring_analyzer]
-validation_mode = "strict"
-min_coverage = 90
-inject_docstrings = true
-docstring_style = "google"
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "automated-python-docstring-generator"
+version = "0.1.0"
+description = "Automated Python Docstring Generator with smart Google-style injection and coverage reporting."
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Mehek Singh" }
+]
+
+dependencies = [
+    "pydocstyle",
+    "streamlit",
+    "plotly",
+    "reportlab"
+]
+
+[project.scripts]
+docgen = "docgen.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
